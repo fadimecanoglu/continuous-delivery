@@ -1,4 +1,15 @@
 # This is a basic workflow to help you get started with Actions
+env:
+  repo:            "https://github.com/farrukh90/artemis"
+  app_version:     "2.0.0"
+  repo_region:     "us-central1"
+  project_id:      "${{ secrets.PROJECT_ID }}"
+  app_name:        "artemis"
+  tag_new_version: ${GITHUB_SHA}
+
+
+
+
 
 name: CI
 
@@ -31,3 +42,69 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+
+
+      # Runs a set of commands using the runners shell
+      - name: Clone a repo
+        run: |
+          git clone ${{ env.repo }}
+
+
+      # Runs a set of commands using the runners shell
+      - name: Switch Branches
+        working-directory: ${{ env.app_name }}
+        run: |
+          git checkout ${{ env.app_version }}
+          ls -l
+
+
+
+      # Runs a set of commands using the runners shell
+      - name: Remove Old Images
+        working-directory: ${{ env.app_name }}
+        run: |
+           echo "hello"
+          #docker image prune -af
+
+
+
+      # Runs a set of commands using the runners shell
+      - name: Build Image
+        working-directory: ${{ env.app_name }}
+        run: |
+          # docker image prune -af
+          docker build -t ${{ env.app_name }}:${{ env.app_version }}   . 
+
+
+      # Runs a set of commands using the runners shell
+      - name: Tag Image
+        working-directory: ${{ env.app_name }}
+        run: |
+          docker image tag ${{ env.app_name }}:${{ env.app_version }} ${{ env.repo_region }}-docker.pkg.dev/${{ env.project_id }}/${{ env.app_name }}/${{ env.app_name }}:${{ env.tag_new_version }}     
+
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: gcloud version 
+
+
+      # Authenticate to GCP
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.SERVICE_ACCOUNT }}'
+
+
+      - name: Authenticate to repository
+        run: |
+          gcloud auth configure-docker  ${{ env.repo_region }}-docker.pkg.dev
+
+          
+
+
+      # Runs a set of commands using the runners shell
+      - name: Image push
+        working-directory: ${{ env.app_name }}
+        run: |
+          docker push ${{ env.repo_region }}-docker.pkg.dev/${{ env.project_id }}/${{ env.app_name }}/${{ env.app_name }}:${{ env.tag_new_version }}
