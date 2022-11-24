@@ -1,0 +1,7 @@
+env:
+  repo:            "https://github.com/farrukh90/nodejs"
+  app_version:     "1.0.0"
+  repo_region:     "us-central1"
+  project_id:      "${{ secrets.PROJECT_ID }}"
+  app_name:        "artemis"
+  tag_new_version: ${GITHUB_SHA}
