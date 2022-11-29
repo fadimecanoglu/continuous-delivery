@@ -74,7 +74,7 @@ jobs:
       - name: Create workspace
         working-directory: "custom_helm_chart"
         run: |
-          terraform workspace  select  dev   ||  terraform workspace  new  dev
+          terraform workspace  select  ${{ env.environment}}   ||  terraform workspace  new  ${{ env.environment}}
 
 
       # Runs a set of commands using the runners shell
