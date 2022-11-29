@@ -91,3 +91,4 @@ jobs:
           -var project_id="${{ secrets.PROJECT_ID }}" \
           -var environment="${{ env.environment}}" \
           --auto-approve
+          
