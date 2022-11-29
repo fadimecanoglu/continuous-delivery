@@ -1,7 +1,7 @@
 # This is a basic workflow to help you get started with Actions
 env:
   repo:            "https://github.com/farrukh90/artemis"
-  app_version:     "2.0.0"
+  app_version:     "10.0.0"
   repo_region:     "us-central1"
   project_id:      "${{ secrets.PROJECT_ID }}"
   app_name:        "artemis"
