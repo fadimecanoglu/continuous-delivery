@@ -8,6 +8,7 @@ env:
   cluster_name:       "project-cluster"
   helm_repository:    "https://github.com/farrukh90/custom_helm_chart.git"
   google_domain_name: "${{ secrets.GOOGLE_DOMAIN_NAME }}"
+  environment:         "dev"
   
 
 
@@ -88,4 +89,5 @@ jobs:
           -var app_name="${{ env.app_name }}"   \
           -var region="${{ env.region }}" \
           -var project_id="${{ secrets.PROJECT_ID }}" \
+          -var environment="${{ env.environment}}" \
           --auto-approve
