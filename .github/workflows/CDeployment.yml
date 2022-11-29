@@ -1,0 +1,91 @@
+env:
+  region:             "us-central1"
+  app_name:           "artemis"
+  app_version:        ${GITHUB_SHA}
+  app_port:           "5000"
+  project_id:         "${{ secrets.PROJECT_ID }}"
+  repository:         "us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/artemis/artemis"
+  cluster_name:       "project-cluster"
+  helm_repository:    "https://github.com/farrukh90/custom_helm_chart.git"
+  google_domain_name: "${{ secrets.GOOGLE_DOMAIN_NAME }}"
+  
+
+
+name: ContinuousDeployment
+on:
+  workflow_run:
+    workflows: ["ContinuousDelivery"]
+    types:
+      - completed
+# on:
+#   # Triggers the workflow on push or pull request events but only for the "main" branch
+#   push:
+#     branches: [ "main" ]
+#   pull_request:
+#     branches: [ "main" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Authenticate to GCP
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.SERVICE_ACCOUNT }}'
+
+      - name: Check Out Helm Repo
+        run: |
+          git clone "${{ env.helm_repository }}"
+        
+
+      # Get k8s credentials
+      - name: Get k8s credentials
+        run: |
+          gcloud container clusters get-credentials "${{ env.cluster_name }}" --region  "${{ env.region }}"
+          kubectl get nodes
+
+      
+      - name: Configure Backend
+        working-directory: "custom_helm_chart"
+        run: |
+          bash setenv.sh
+
+      - name: Initialize
+        working-directory: "custom_helm_chart"
+        run: |
+          terraform init 
+
+
+      - name: Create workspace
+        working-directory: "custom_helm_chart"
+        run: |
+          terraform workspace  select  dev   ||  terraform workspace  new  dev
+
+
+      # Runs a set of commands using the runners shell
+      - name: Deploy Application
+        working-directory: "custom_helm_chart"
+        run: |
+          terraform apply   \
+          -var repository="${{ env.repository }}"     \
+          -var app_version="${{ env.app_version }}"   \
+          -var app_port="${{ env.app_port }}"          \
+          -var google_domain_name="${{ env.google_domain_name }}"          \
+          -var app_name="${{ env.app_name }}"   \
+          -var region="${{ env.region }}" \
+          -var project_id="${{ secrets.PROJECT_ID }}" \
+          --auto-approve
